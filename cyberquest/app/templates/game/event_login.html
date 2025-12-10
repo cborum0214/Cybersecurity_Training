@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window">
+  <h2>Login Attempt</h2>
+  <p>{{ event.description }}</p>
+
+  <ul class="event-meta">
+    <li><strong>Username:</strong> {{ event.username }}</li>
+    <li><strong>Source IP:</strong> {{ event.source_ip }}</li>
+    <li><strong>Network:</strong> {{ event.network }}</li>
+    <li><strong>Failed attempts:</strong> {{ event.failed_attempts }}</li>
+  </ul>
+
+  <form method="post" action="{{ url_for('game.choice') }}">
+    <button type="submit" name="choice" value="allow">Allow</button>
+    <button type="submit" name="choice" value="deny">Deny</button>
+  </form>
+</div>
+{% endblock %}

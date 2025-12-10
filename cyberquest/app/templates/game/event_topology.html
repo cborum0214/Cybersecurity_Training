@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window">
+  <h2>TOPOLOGY CHALLENGE – DAY {{ state.level }}</h2>
+
+  <p style="margin-bottom: 8px;">
+    Build the network to match the hospital diagram.
+  </p>
+  <ul style="margin-top: 0; margin-bottom: 10px;">
+    <li>Drag devices around inside the blue network area.</li>
+    <li>
+      Click one device to select it, then hold
+      <strong>Ctrl</strong> and click a second device to create a connection.
+    </li>
+    <li>Connections show as <strong>lines</strong> and in the list below.</li>
+    <li>When finished, click <strong>Submit Topology</strong>.</li>
+  </ul>
+
+  <!-- Network area -->
+  <div id="network-area">
+    <svg id="connection-svg"></svg>
+
+    <div class="device-node" data-id="internet">Internet</div>
+    <div class="device-node" data-id="ext_fw">External Firewall</div>
+    <div class="device-node" data-id="router1">External Router</div>
+    <div class="device-node" data-id="switch1">Switch 1 (DMZ)</div>
+    <div class="device-node" data-id="int_fw">Internal Firewall</div>
+    <div class="device-node" data-id="router2">Internal Router</div>
+    <div class="device-node" data-id="switch2">Switch 2 (Internal)</div>
+    <div class="device-node" data-id="web_server">Web Server</div>
+    <div class="device-node" data-id="int_server">Internal Server</div>
+    <div class="device-node" data-id="user1">User 1 PC</div>
+    <div class="device-node" data-id="user2">User 2 PC</div>
+  </div>
+
+  <!-- Connections list -->
+  <div class="connections-panel">
+    <h3>Connections (Ctrl + click second device to add)</h3>
+    <ul id="connections-list"></ul>
+  </div>
+
+  <!-- BIG submit button -->
+  <form method="post"
+        action="{{ url_for('game.choice') }}"
+        id="topology-form"
+        style="margin-top: 18px; text-align: center;">
+    <input type="hidden" name="choice" value="submit_topology">
+    <input type="hidden" name="connections" id="connections-input">
+    <button type="submit"
+            style="padding: 12px 28px; font-size: 1.1rem; text-transform: uppercase;">
+      Submit Topology
+    </button>
+  </form>
+</div>
+
+<script>
+// ---------- DRAGGING ----------
+const nodes = document.querySelectorAll('.device-node');
+const area = document.getElementById('network-area');
+const svg = document.getElementById('connection-svg');
+
+nodes.forEach(node => {
+  node.style.position = 'absolute';
+  node.style.left = (40 + Math.random() * 480) + 'px';
+  node.style.top = (40 + Math.random() * 220) + 'px';
+
+  let offsetX = 0, offsetY = 0, dragging = false;
+
+  node.addEventListener('mousedown', e => {
+    dragging = true;
+    offsetX = e.clientX - node.offsetLeft;
+    offsetY = e.clientY - node.offsetTop;
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    node.style.left = (e.clientX - offsetX) + 'px';
+    node.style.top = (e.clientY - offsetY) + 'px';
+    updateLines();
+  });
+
+  document.addEventListener('mouseup', () => {
+    dragging = false;
+  });
+});
+
+// ---------- CONNECTIONS (LOGIC) ----------
+let selectedDevice = null;
+let connections = [];  // array of [id1, id2] sorted
+
+function addConnection(a, b) {
+  if (a === b) return;
+  const pair = [a, b].sort();
+  if (!connections.some(c => c[0] === pair[0] && c[1] === pair[1])) {
+    connections.push(pair);
+    renderConnections();
+    updateLines();
+  }
+}
+
+function renderConnections() {
+  const list = document.getElementById('connections-list');
+  list.innerHTML = '';
+  connections.forEach(c => {
+    const li = document.createElement('li');
+    li.textContent = c[0] + ' ↔ ' + c[1];
+    list.appendChild(li);
+  });
+}
+
+// ---------- CONNECTIONS (CLICK HANDLER WITH CTRL) ----------
+nodes.forEach(node => {
+  node.addEventListener('click', (e) => {
+    const id = node.getAttribute('data-id');
+
+    // First click: nothing selected yet
+    if (!selectedDevice) {
+      selectedDevice = id;
+      nodes.forEach(n => n.classList.remove('selected'));
+      node.classList.add('selected');
+      return;
+    }
+
+    // Clicked the same device again -> deselect
+    if (selectedDevice === id) {
+      selectedDevice = null;
+      node.classList.remove('selected');
+      return;
+    }
+
+    // Different device clicked while one is already selected
+    if (e.ctrlKey) {
+      // Only create a connection if CTRL is held
+      addConnection(selectedDevice, id);
+      selectedDevice = null;
+      nodes.forEach(n => n.classList.remove('selected'));
+    } else {
+      // No CTRL: just move the selection to this new device
+      selectedDevice = id;
+      nodes.forEach(n => n.classList.remove('selected'));
+      node.classList.add('selected');
+    }
+  });
+});
+
+// ---------- DRAW LINES WITH SVG ----------
+function updateLines() {
+  // clear svg
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const areaRect = area.getBoundingClientRect();
+
+  // ensure svg covers full area
+  svg.setAttribute('width', areaRect.width);
+  svg.setAttribute('height', areaRect.height);
+
+  connections.forEach(c => {
+    const id1 = c[0];
+    const id2 = c[1];
+    const n1 = document.querySelector(`.device-node[data-id="${id1}"]`);
+    const n2 = document.querySelector(`.device-node[data-id="${id2}"]`);
+    if (!n1 || !n2) return;
+
+    const r1 = n1.getBoundingClientRect();
+    const r2 = n2.getBoundingClientRect();
+
+    const x1 = r1.left - areaRect.left + r1.width / 2;
+    const y1 = r1.top - areaRect.top + r1.height / 2;
+    const x2 = r2.left - areaRect.left + r2.width / 2;
+    const y2 = r2.top - areaRect.top + r2.height / 2;
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute('x1', x1);
+    line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2);
+    line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#9fd5ff');
+    line.setAttribute('stroke-width', '2');
+    svg.appendChild(line);
+  });
+}
+
+// update lines once at start
+updateLines();
+
+// ---------- BEFORE SUBMIT ----------
+document.getElementById('topology-form').addEventListener('submit', () => {
+  document.getElementById('connections-input').value = JSON.stringify(connections);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Cyberquest: Hospital Defender</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body class="desktop-bg">
+  <div class="monitor-container">
+    <div class="monitor-frame">
+      <div class="monitor-header">
+        <div class="monitor-led"></div>
+        <div class="monitor-title">Security Operations Console</div>
+        <div class="monitor-status">
+          Level: {{ state.level if state else 1 }} |
+          Score: {{ state.score if state else 0 }} |
+          Reprimands: {{ state.reprimands if state else 0 }}/3 |
+          Shift correct: {{ state.correct_decisions_in_shift if state else 0 }}/10
+        </div>
+        <div class="monitor-actions">
+          <button type="button" class="header-btn" onclick="openModal('users-modal')">
+            Approved Users
+          </button>
+          <button type="button" class="header-btn" onclick="openModal('devices-modal')">
+            Approved Devices
+          </button>
+        </div>
+      </div>
+
+      <div class="monitor-screen">
+        <div class="screen-main">
+          {% block content %}{% endblock %}
+        </div>
+
+        <div class="screen-log">
+          <div class="log-title">SYSTEM EVENT LOG</div>
+          <div class="log-body">
+            {% if state and state.logs %}
+              {# show most recent entries at the bottom – or reverse if you prefer #}
+              {% for line in state.logs[-20:] %}
+                <div class="log-line">{{ line }}</div>
+              {% endfor %}
+            {% else %}
+              <div class="log-line log-muted">No events yet. Awaiting activity...</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="monitor-footer">
+        <span class="footer-indicator"></span>
+        <span class="footer-text">HOSPITAL SOC TERMINAL</span>
+      </div>
+    </div>
+    <div class="monitor-stand"></div>
+    <div class="monitor-base"></div>
+  </div>
+
+  <div class="top-right-controls">
+    <a href="{{ url_for('game.reset') }}">Restart Shift</a>
+  </div>
+<!-- Pop-up: Approved Users -->
+  <div id="users-modal" class="modal-overlay">
+    <div class="modal-window">
+      <div class="modal-header">
+        <span>Approved Users</span>
+        <button class="modal-close" type="button" onclick="closeModal('users-modal')">
+          ✕
+        </button>
+      </div>
+      <div class="modal-body">
+        {% if approved_users %}
+          <table class="modal-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Department</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in approved_users %}
+              <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.role }}</td>
+                <td>{{ user.department }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>No approved users configured.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Pop-up: Approved Devices -->
+  <div id="devices-modal" class="modal-overlay">
+    <div class="modal-window">
+      <div class="modal-header">
+        <span>Approved Devices</span>
+        <button class="modal-close" type="button" onclick="closeModal('devices-modal')">
+          ✕
+        </button>
+      </div>
+      <div class="modal-body">
+        {% if approved_devices %}
+          <table class="modal-table">
+            <thead>
+              <tr>
+                <th>MAC Address</th>
+                <th>Device Name</th>
+                <th>Location</th>
+                <th>Network</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for dev in approved_devices %}
+              <tr>
+                <td>{{ dev.mac }}</td>
+                <td>{{ dev.device_name }}</td>
+                <td>{{ dev.location }}</td>
+                <td>{{ dev.network }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p>No approved devices configured.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openModal(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.classList.add("open");
+      }
+    }
+    function closeModal(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.classList.remove("open");
+      }
+    }
+  </script>
+</body>
+</html>

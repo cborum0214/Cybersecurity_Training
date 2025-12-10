@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="day-popup-overlay">
+  <div class="day-popup-window">
+    <h2>Welcome to Day {{ state.level }}</h2>
+
+    <p>Your previous shift is complete.</p>
+    <p>Reprimands have been reset.</p>
+    <p>Prepare for new challenges today.</p>
+
+    <form method="post" action="{{ url_for('game.day_continue') }}">
+      <button class="popup-btn" type="submit">Continue</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

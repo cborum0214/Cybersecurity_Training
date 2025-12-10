@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window"></div>
+    <h2>Game Over</h2>
+    <p>You have been fired. Too many reprimands.</p>
+    <p>Final score: {{ state.score }}</p>
+    <p><a href="{{ url_for('game.reset') }}">Play Again</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window">
+  <h2>Patch Management Decision</h2>
+  <p>{{ event.description }}</p>
+
+  <div class="event-meta">
+    <p><strong>Affected System:</strong> {{ event.system }}</p>
+    <p><strong>Severity:</strong> {{ event.severity }}</p>
+    <p><strong>Current Operational Load:</strong> {{ event.business_load }}</p>
+  </div>
+
+  <p>
+    Threat intelligence reports indicate that this vulnerability
+    {% if event.exploit_in_wild %}
+      <strong>is currently being exploited in the wild.</strong>
+    {% else %}
+      <strong>does not yet appear to be widely exploited.</strong>
+    {% endif %}
+  </p>
+
+  <p>
+    Applying the patch now may require downtime and could disrupt critical hospital operations.
+    Postponing could leave systems vulnerable. Choose carefully.
+  </p>
+
+  <form method="post" action="{{ url_for('game.choice') }}">
+    <button type="submit" name="choice" value="apply_now">
+      Apply Patch Now
+    </button>
+    <button type="submit" name="choice" value="postpone">
+      Postpone Patch
+    </button>
+  </form>
+</div>
+{% endblock %}

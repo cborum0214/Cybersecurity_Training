@@ -1,0 +1,499 @@
+/* Background desktop feel */
+body.desktop-bg {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #2b3c5a 0, #050814 50%, #020308 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e6f0ff;
+}
+
+/* Top-right always-visible controls */
+.top-right-controls {
+  position: fixed;
+  top: 10px;
+  right: 18px;
+  font-size: 0.9rem;
+}
+
+.top-right-controls a {
+  color: #9fd5ff;
+  text-decoration: none;
+}
+
+.top-right-controls a:hover {
+  text-decoration: underline;
+}
+
+/* Monitor structure */
+.monitor-frame {
+  width: 1200px;
+  max-width: 98vw;
+
+  /* Let it grow instead of clipping */
+  min-height: 800px;   /* keeps it looking like a big monitor */
+  height: auto;        /* removes the hard cap */
+
+  background: #10151f;
+  border-radius: 18px;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    0 0 0 4px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+
+  /* Don't clip the bottom of the content */
+  overflow: visible;
+
+  border: 2px solid #141b2a;
+}
+
+
+/* Header area of "monitor" (like a title bar) */
+.monitor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, #141b2a, #182338);
+  border-bottom: 1px solid #252f4a;
+  font-size: 0.9rem;
+}
+
+.monitor-led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #32ff7f 0, #0b8f3a 60%, #021208 100%);
+  box-shadow: 0 0 8px rgba(50, 255, 127, 0.7);
+}
+
+.monitor-title {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  color: #8fb3ff;
+}
+
+.monitor-status {
+  font-size: 0.8rem;
+  color: #d0e4ff;
+}
+
+/* Screen area where events render */
+.monitor-screen {
+  flex: 1;
+  background: radial-gradient(circle at top left, #1a2235 0, #050814 60%, #020307 100%);
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  /* Increase usable space */
+  overflow: hidden;
+}
+
+
+/* Footer area under the screen */
+.monitor-footer {
+  height: 32px;
+  background: #0b0f1a;
+  border-top: 1px solid #151c2b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #495a7c;
+  position: relative;
+}
+
+.footer-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 12px;
+  background: radial-gradient(circle, #ffdd66 0, #b08926 60%, #2a1c03 100%);
+  box-shadow: 0 0 6px rgba(255, 221, 102, 0.7);
+}
+
+.footer-text {
+  opacity: 0.8;
+}
+
+/* Monitor stand and base */
+.monitor-stand {
+  width: 60px;
+  height: 40px;
+  margin-top: 10px;
+  background: linear-gradient(to bottom, #131926, #060910);
+  border-radius: 12px;
+  box-shadow: 0 10px 16px rgba(0, 0, 0, 0.7);
+}
+
+.monitor-base {
+  width: 220px;
+  height: 20px;
+  margin-top: 10px;
+  background: linear-gradient(to right, #181f30, #05070c);
+  border-radius: 20px;
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.9);
+}
+
+/* Generic content styling INSIDE the monitor screen */
+h2 {
+  margin-top: 0;
+  color: #eaf3ff;
+}
+
+p {
+  margin-top: 0.4rem;
+  line-height: 1.4;
+  color: #c9d6f2;
+}
+
+/* Card-style window for each event */
+.event-window {
+  background: rgba(6, 11, 24, 0.9);
+  border-radius: 10px;
+  border: 1px solid #27324c;
+  box-shadow:
+    0 10px 25px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(75, 128, 205, 0.2);
+  padding: 18px 20px;
+}
+
+.event-meta {
+  font-size: 0.85rem;
+  color: #97a4c7;
+}
+
+.event-meta li {
+  margin-bottom: 4px;
+}
+
+/* Buttons styled like SOC console actions */
+form button {
+  margin-right: 10px;
+  margin-top: 14px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  background: #184878;
+  color: #eaf3ff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+  transition: transform 0.05s ease, box-shadow 0.1s ease, background 0.1s ease;
+}
+
+form button:nth-of-type(2) {
+  background: #7a2430;
+}
+
+form button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.8);
+}
+
+form button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Small scrollbars for screen */
+.monitor-screen::-webkit-scrollbar {
+  width: 8px;
+}
+.monitor-screen::-webkit-scrollbar-track {
+  background: #050814;
+}
+.monitor-screen::-webkit-scrollbar-thumb {
+  background: #283550;
+  border-radius: 4px;
+}
+/* Make the screen host main content + log panel */
+.monitor-screen {
+  flex: 1;
+  background: radial-gradient(circle at top left, #1a2235 0, #050814 60%, #020307 100%);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Top area where the event-window lives */
+.screen-main {
+  flex: 3; /* previously 2; gives more vertical room */
+  overflow: visible; /* no scrolling */
+}
+
+/* Bottom terminal-style log panel */
+.screen-log {
+  flex: 1.2; /* previously 1 */
+  background: #020508;
+  border-radius: 8px;
+  border: 1px solid #18202f;
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* border area */
+}
+
+.log-title {
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #7da4a5;
+  background: linear-gradient(90deg, #051616, #030a0b);
+  border-bottom: 1px solid #112023;
+}
+
+.log-body {
+  flex: 1;
+  padding: 8px 12px;
+  font-family: "Consolas", "Fira Code", monospace;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  color: #00e676;
+
+  /* ONLY the log scrolls */
+  overflow-y: auto;
+}
+
+/* Slight flicker/noise vibe could be added later with animations if you want */
+
+.log-line {
+  white-space: pre-wrap;
+}
+
+.log-muted {
+  color: #4c6b63;
+}
+
+.monitor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, #141b2a, #182338);
+  border-bottom: 1px solid #252f4a;
+  font-size: 0.9rem;
+}
+
+.monitor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.header-btn {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 6px;
+  border: 1px solid #2b3d63;
+  background: #111a2a;
+  color: #c9ddff;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.header-btn:hover {
+  background: #1b2940;
+}
+
+/* Modal overlay and window */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999; /* above everything */
+}
+
+.modal-overlay.open {
+  display: flex;
+}
+
+.modal-window {
+  background: #070c16;
+  border-radius: 10px;
+  border: 1px solid #2b3856;
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(93, 140, 230, 0.25);
+  width: 700px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #161f32, #202f4b);
+  border-bottom: 1px solid #293757;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #c6d8ff;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  color: #c6d8ff;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 10px 14px 14px 14px;
+  background: radial-gradient(circle at top left, #0b111f 0, #050812 60%, #020308 100%);
+  overflow: auto;
+  color: #dde7ff;
+  font-size: 0.9rem;
+}
+
+/* Table inside modal */
+
+.modal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+
+.modal-table th,
+.modal-table td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid #1f2a42;
+}
+
+.modal-table th {
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: #9ab5ff;
+  background: rgba(9, 18, 36, 0.8);
+}
+
+.modal-table tr:nth-child(even) td {
+  background: rgba(8, 14, 26, 0.6);
+}
+
+.modal-table tr:nth-child(odd) td {
+  background: rgba(4, 9, 18, 0.7);
+}
+
+/* Day Popup Overlay */
+.day-popup-overlay {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.day-popup-window {
+  background: #0b111f;
+  border: 1px solid #314a7b;
+  border-radius: 10px;
+  padding: 28px 40px;
+  text-align: center;
+  color: #d8e6ff;
+  width: 420px;
+  box-shadow: 0 0 20px #000;
+}
+
+.day-popup-window h2 {
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.popup-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: #1b2c45;
+  color: #d8e6ff;
+  border: 1px solid #3a577e;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.popup-btn:hover {
+  background: #233759;
+}
+
+#network-area {
+  position: relative;
+  height: 320px;
+  border: 1px dashed #2c3c5a;
+  border-radius: 8px;
+  margin: 12px 0;
+  background: radial-gradient(circle at top, #0a1222 0, #050812 55%, #020308 100%);
+  overflow: hidden;
+}
+
+#network-area #connection-svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.device-node {
+  width: 130px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: #18263e;
+  color: #d9e5ff;
+  border: 1px solid #30456d;
+  font-size: 0.8rem;
+  text-align: center;
+  cursor: move;
+  user-select: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+}
+
+.device-node.selected {
+  border-color: #48ffab;
+  box-shadow: 0 0 10px rgba(72,255,171,0.9);
+}
+
+.connections-panel {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #283857;
+  background: rgba(6, 12, 24, 0.8);
+
+  /* NEW — Bigger list area */
+  height: 200px;          /* used to be 140px */
+  max-height: none;
+
+  overflow-y: auto;       /* still scrolls if it gets huge */
+}

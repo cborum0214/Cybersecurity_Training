@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window">
+  <h2>Phishing Email Triage</h2>
+  <p>{{ event.description }}</p>
+
+  <div class="event-meta">
+    <p><strong>Display Name:</strong> {{ event.display_name }}</p>
+    <p><strong>From:</strong> {{ event.sender_email }}</p>
+    <p><strong>Subject:</strong> {{ event.subject }}</p>
+    <p><strong>Preview:</strong> {{ event.body_preview }}</p>
+    <p><strong>Link Domain:</strong> {{ event.link_domain }}</p>
+  </div>
+
+  <p>
+    The secure email gateway has flagged this message for review.
+    Decide whether to mark it as phishing or allow it to be delivered
+    to hospital staff.
+  </p>
+
+  <form method="post" action="{{ url_for('game.choice') }}">
+    <button type="submit" name="choice" value="mark_phishing">
+      Mark as Phishing
+    </button>
+    <button type="submit" name="choice" value="deliver">
+      Allow Delivery
+    </button>
+  </form>
+</div>
+{% endblock %}

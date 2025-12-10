@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window"></div>
+  <h2>Rogue Device Detected</h2>
+  <p>{{ event.description }}</p>
+
+  <ul>
+    <li><strong>MAC:</strong> {{ event.mac_address }}</li>
+    <li><strong>Manufacturer:</strong> {{ event.manufacturer }}</li>
+    <li><strong>Location:</strong> {{ event.location }}</li>
+  </ul>
+
+  <form method="post" action="{{ url_for('game.choice') }}">
+    <button type="submit" name="choice" value="disconnect">Disconnect Device</button>
+    <button type="submit" name="choice" value="allow">Allow Device</button>
+  </form>
+</div>
+{% endblock %}
