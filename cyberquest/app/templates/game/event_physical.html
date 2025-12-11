@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window">
+  <h2>Physical Security Event – Day {{ state.level }}</h2>
+
+  <p><strong>Camera Location:</strong> {{ event.location }}</p>
+
+  <div class="event-meta">
+    <p>{{ event.description }}</p>
+  </div>
+
+  <p><em>Hint:</em> {{ event.hint }}</p>
+
+  <p>
+    Choose the most appropriate response according to physical security policy.
+  </p>
+
+  <form method="post" action="{{ url_for('game.choice') }}">
+    <button type="submit" name="choice" value="ignore">Ignore</button>
+    <button type="submit" name="choice" value="log">Log Incident</button>
+    <button type="submit" name="choice" value="respond">Respond / Call Security</button>
+  </form>
+</div>
+{% endblock %}

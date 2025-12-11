@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window">
+  <h2>Attack Path Analysis – Day {{ state.level }}</h2>
+
+  <p>{{ event.description }}</p>
+
+  <p><strong>Observed Attack Path:</strong></p>
+  <ol>
+    {% for step in event.steps %}
+      <li>{{ step }}</li>
+    {% endfor %}
+  </ol>
+
+  <p><strong>Question:</strong> {{ event.question }}</p>
+
+  <p>Choose the best control to break or prevent this attack path.</p>
+
+  <form method="post" action="{{ url_for('game.choice') }}">
+    {% if event.correct_action == "segment_kiosk" %}
+      <button type="submit" name="choice" value="segment_kiosk">
+        Segment Between Kiosk and Internal Network
+      </button>
+      <button type="submit" name="choice" value="db_only">
+        Only Protect the Database Itself
+      </button>
+      <button type="submit" name="choice" value="edge_only">
+        Only Add Rules at the Internet Edge
+      </button>
+    {% elif event.correct_action == "endpoint_edr" %}
+      <button type="submit" name="choice" value="endpoint_edr">
+        Deploy Strong Endpoint EDR on Laptops
+      </button>
+      <button type="submit" name="choice" value="edge_only">
+        Add Extra Internet Edge Firewall
+      </button>
+      <button type="submit" name="choice" value="more_backups">
+        Just Add More Backups
+      </button>
+    {% else %}
+      <!-- fallback; shouldn't normally hit -->
+      <button type="submit" name="choice" value="{{ event.correct_action }}">
+        Best Control
+      </button>
+    {% endif %}
+  </form>
+</div>
+{% endblock %}

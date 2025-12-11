@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window">
+  <h2>Firewall Policy – Day {{ state.level }}</h2>
+
+  <p>{{ event.description }}</p>
+  <p><em>{{ event.prompt }}</em></p>
+
+  <p>
+    Fill in the firewall rule fields below. Focus on:<br>
+    – Correct action (ALLOW or DENY)<br>
+    – Correct protocol (TCP or UDP)<br>
+    – Correct destination port
+  </p>
+
+  <form method="post" action="{{ url_for('game.choice') }}" class="firewall-form">
+    <div style="margin-bottom: 8px;">
+      <label>
+        Action:
+        <select name="fw_action">
+          <option value="allow">ALLOW</option>
+          <option value="deny">DENY</option>
+        </select>
+      </label>
+    </div>
+
+    <div style="margin-bottom: 8px;">
+      <label>
+        Protocol:
+        <select name="fw_protocol">
+          <option value="tcp">TCP</option>
+          <option value="udp">UDP</option>
+        </select>
+      </label>
+    </div>
+
+    <div style="margin-bottom: 12px;">
+      <label>
+        Port:
+        <input type="text" name="fw_port" placeholder="e.g. 443">
+      </label>
+    </div>
+
+    <!-- choice value is not used for correctness, but we send one anyway -->
+    <button type="submit" name="choice" value="submit_firewall">
+      Submit Firewall Rule
+    </button>
+  </form>
+</div>
+{% endblock %}

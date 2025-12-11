@@ -8,7 +8,7 @@ from . import events
 
 class GameEngine:
     """
-    Contains the core game logic. Operates on a GameState instance.
+    Core game logic. Operates on a GameState instance.
     """
 
     def __init__(self, state: GameState):
@@ -23,6 +23,7 @@ class GameEngine:
         - Reprimands reset to 0
         - correct_decisions_in_shift resets to 0
         - Level is advanced
+        - pending_day_popup is set True
         """
         self.state.correct_decisions_in_shift += 1
         remaining = 10 - self.state.correct_decisions_in_shift
@@ -39,16 +40,15 @@ class GameEngine:
             "Your shift has ended."
         )
 
-        # Advance level, reset reprimands, reset counter
+        # Advance level and reset reprimands & counter
         self.state.level += 1
         self.state.reprimands = 0
         self.state.correct_decisions_in_shift = 0
-
-        # Trigger day popup
         self.state.pending_day_popup = True
 
         self.state.add_log(
-            f"[SYSTEM] Shift complete. Now starting Day {self.state.level}."
+            f"[SYSTEM] Level advanced to {self.state.level}. "
+            "Reprimand count has been reset to 0."
         )
 
     # --- Event lifecycle ---
@@ -64,7 +64,7 @@ class GameEngine:
         if self.state.level >= 3 and not self.state.topology_completed:
             ev = events.generate_topology_event()
         else:
-            ev = events.random_event()
+            ev = events.random_event(self.state.level)
 
         self.state.current_event = ev
 
@@ -115,12 +115,51 @@ class GameEngine:
                 f"(load={ev['business_load']})"
             )
 
-        #Topology events
+        # Topology events
         elif ev["type"] == events.EVENT_TOPOLOGY:
             self.state.current_event_started_at = None
             self.state.current_event_deadline = None
             self.state.add_log(
                 "[TRAINING] Topology challenge: design the hospital network."
+            )
+
+        # Packet inspection
+        elif ev["type"] == events.EVENT_PACKET:
+            self.state.current_event_started_at = None
+            self.state.current_event_deadline = None
+            self.state.add_log(
+                "[PACKET] Inspect network traffic between "
+                f"{ev['src_ip']} and {ev['dst_ip']}."
+            )
+
+        # Firewall rule
+        elif ev["type"] == events.EVENT_FIREWALL:
+            self.state.current_event_started_at = None
+            self.state.current_event_deadline = None
+            self.state.add_log("[FIREWALL] New firewall policy requirement received.")
+
+        # Social engineering
+        elif ev["type"] == events.EVENT_SOCIAL:
+            self.state.current_event_started_at = None
+            self.state.current_event_deadline = None
+            self.state.add_log(
+                f"[SOCIAL] Possible social engineering attempt via {ev['channel']}."
+            )
+
+        # Physical security
+        elif ev["type"] == events.EVENT_PHYSICAL:
+            self.state.current_event_started_at = None
+            self.state.current_event_deadline = None
+            self.state.add_log(
+                f"[PHYSICAL] Camera event at {ev['location']}."
+            )
+
+        # Attack path
+        elif ev["type"] == events.EVENT_PATH:
+            self.state.current_event_started_at = None
+            self.state.current_event_deadline = None
+            self.state.add_log(
+                "[PATH] Analyze attack path and choose best control."
             )
 
         return ev
@@ -167,7 +206,7 @@ class GameEngine:
                 )
                 self._register_correct_decision()
 
-        # Clear current event after decision
+        # Clear current event
         self.state.current_event = None
         self.state.current_event_started_at = None
         self.state.current_event_deadline = None
@@ -210,7 +249,7 @@ class GameEngine:
                 )
                 self._register_correct_decision()
 
-        # Clear current event after decision
+        # Clear current event
         self.state.current_event = None
         self.state.current_event_started_at = None
         self.state.current_event_deadline = None
@@ -255,7 +294,7 @@ class GameEngine:
                 )
                 self._register_correct_decision()
 
-        # Clear current event after decision
+        # Clear current event
         self.state.current_event = None
         self.state.current_event_started_at = None
         self.state.current_event_deadline = None
@@ -353,6 +392,188 @@ class GameEngine:
         self.state.current_event_started_at = None
         self.state.current_event_deadline = None
 
+    def handle_topology_choice(self, connections_json: str):
+        """
+        Handle the topology challenge submission.
+
+        connections_json: JSON string of list of [from, to] pairs
+        """
+        ev = self.state.current_event
+        if not ev or ev["type"] != events.EVENT_TOPOLOGY:
+            return
+
+        try:
+            user_edges = json.loads(connections_json or "[]")
+        except json.JSONDecodeError:
+            user_edges = []
+
+        required_edges = {
+            frozenset(("internet", "ext_fw")),
+            frozenset(("ext_fw", "router1")),
+            frozenset(("router1", "switch1")),
+            frozenset(("switch1", "int_fw")),
+            frozenset(("switch1", "web_server")),
+            frozenset(("int_fw", "router2")),
+            frozenset(("router2", "switch2")),
+            frozenset(("switch2", "int_server")),
+            frozenset(("switch2", "user1")),
+            frozenset(("switch2", "user2")),
+        }
+
+        user_edge_set = set()
+        for edge in user_edges:
+            if not isinstance(edge, list) or len(edge) != 2:
+                continue
+            a, b = edge
+            user_edge_set.add(frozenset((a, b)))
+
+        if user_edge_set == required_edges:
+            self.state.add_score(30)
+            self.state.add_log(
+                "[DECISION] Topology challenge solved correctly. "
+                "Network diagram matches reference."
+            )
+            self.state.topology_completed = True
+            self._register_correct_decision()
+        else:
+            self.state.add_reprimand(
+                "Submitted incorrect network topology. Devices are not connected "
+                "according to the design."
+            )
+
+        self.state.current_event = None
+        self.state.current_event_started_at = None
+        self.state.current_event_deadline = None
+
+    def handle_packet_choice(self, choice: str):
+        """
+        Handle packet inspection decisions: 'allow', 'drop', 'investigate'.
+        """
+        ev = self.state.current_event
+        if not ev or ev["type"] != events.EVENT_PACKET:
+            return
+
+        correct = ev.get("correct_action")
+        explanation = ev.get("explanation", "")
+
+        if choice == correct:
+            self.state.add_score(15)
+            self.state.add_log(f"[DECISION] Packet decision correct. {explanation}")
+            self._register_correct_decision()
+        else:
+            self.state.add_reprimand(
+                f"Incorrect decision on packet inspection. {explanation}"
+            )
+
+        self.state.current_event = None
+        self.state.current_event_started_at = None
+        self.state.current_event_deadline = None
+
+    def handle_firewall_choice(self, rule: dict):
+        """
+        Handle firewall rule submission.
+        rule: dict with fw_action, fw_protocol, fw_port, etc.
+        """
+        ev = self.state.current_event
+        if not ev or ev["type"] != events.EVENT_FIREWALL:
+            return
+
+        expected_action = ev.get("expected_action")
+        expected_protocol = (ev.get("expected_protocol") or "").lower()
+        expected_port = str(ev.get("expected_port"))
+
+        action = (rule.get("action") or "").lower()
+        protocol = (rule.get("protocol") or "").lower()
+        port = (rule.get("port") or "").strip()
+
+        if action == expected_action and protocol == expected_protocol and port == expected_port:
+            self.state.add_score(20)
+            self.state.add_log("[DECISION] Firewall rule correctly matches policy requirement.")
+            self._register_correct_decision()
+        else:
+            self.state.add_reprimand(
+                "Firewall rule does not match the required policy "
+                f"(expected {expected_action.upper()} {expected_protocol.upper()} port {expected_port})."
+            )
+
+        self.state.current_event = None
+        self.state.current_event_started_at = None
+        self.state.current_event_deadline = None
+
+    def handle_social_choice(self, choice: str):
+        """
+        Handle social engineering decisions.
+        choice: 'verify', 'escalate', 'ignore', 'disable'
+        """
+        ev = self.state.current_event
+        if not ev or ev["type"] != events.EVENT_SOCIAL:
+            return
+
+        correct = ev.get("correct_action")
+        if choice == correct:
+            self.state.add_score(15)
+            self.state.add_log(
+                f"[DECISION] Correct response to social engineering attempt ({choice})."
+            )
+            self._register_correct_decision()
+        else:
+            self.state.add_reprimand(
+                f"Incorrect handling of social engineering scenario. Expected {correct.upper()}."
+            )
+
+        self.state.current_event = None
+        self.state.current_event_started_at = None
+        self.state.current_event_deadline = None
+
+    def handle_physical_choice(self, choice: str):
+        """
+        Handle physical security / camera decisions.
+        choice: 'ignore', 'log', 'respond'
+        """
+        ev = self.state.current_event
+        if not ev or ev["type"] != events.EVENT_PHYSICAL:
+            return
+
+        correct = ev.get("correct_action")
+        if choice == correct:
+            self.state.add_score(15)
+            self.state.add_log(
+                f"[DECISION] Correct physical security response ({choice})."
+            )
+            self._register_correct_decision()
+        else:
+            self.state.add_reprimand(
+                f"Inappropriate physical security response. Expected {correct.upper()}."
+            )
+
+        self.state.current_event = None
+        self.state.current_event_started_at = None
+        self.state.current_event_deadline = None
+
+    def handle_path_choice(self, choice: str):
+        """
+        Handle advanced attack path decisions.
+        """
+        ev = self.state.current_event
+        if not ev or ev["type"] != events.EVENT_PATH:
+            return
+
+        correct = ev.get("correct_action")
+        if choice == correct:
+            self.state.add_score(20)
+            self.state.add_log(
+                "[DECISION] Correctly identified the best control to break the attack path."
+            )
+            self._register_correct_decision()
+        else:
+            self.state.add_reprimand(
+                "Selected control does not most effectively break the described attack path."
+            )
+
+        self.state.current_event = None
+        self.state.current_event_started_at = None
+        self.state.current_event_deadline = None
+
     # --- Timers ---
 
     def check_intrusion_timeout(self):
@@ -375,66 +596,3 @@ class GameEngine:
             )
             # Auto-apply "ignore"
             self.handle_intrusion_choice("ignore")
-
-    def handle_topology_choice(self, connections_json: str):
-        """
-        Handle the topology challenge submission.
-
-        connections_json: JSON string of list of [from, to] pairs, e.g.
-        [
-          ["internet", "ext_fw"],
-          ["ext_fw", "router1"],
-          ...
-        ]
-        """
-
-        ev = self.state.current_event
-        if not ev or ev["type"] != events.EVENT_TOPOLOGY:
-            return
-
-        try:
-            user_edges = json.loads(connections_json or "[]")
-        except json.JSONDecodeError:
-            user_edges = []
-
-        # Canonical "correct" undirected edges for your diagram
-        required_edges = {
-            frozenset(("internet", "ext_fw")),
-            frozenset(("ext_fw", "router1")),
-            frozenset(("router1", "switch1")),
-            frozenset(("switch1", "int_fw")),
-            frozenset(("switch1", "web_server")),
-            frozenset(("int_fw", "router2")),
-            frozenset(("router2", "switch2")),
-            frozenset(("switch2", "int_server")),
-            frozenset(("switch2", "user1")),
-            frozenset(("switch2", "user2")),
-        }
-
-        user_edge_set = set()
-        for edge in user_edges:
-            if not isinstance(edge, list) or len(edge) != 2:
-                continue
-            a, b = edge
-            user_edge_set.add(frozenset((a, b)))
-
-        if user_edge_set == required_edges:
-            # Success!
-            self.state.add_score(30)
-            self.state.add_log(
-                "[DECISION] Topology challenge solved correctly. "
-                "Network diagram matches reference."
-            )
-            self.state.topology_completed = True
-            self._register_correct_decision()
-        else:
-            # Incorrect topology
-            self.state.add_reprimand(
-                "Submitted incorrect network topology. Devices are not connected "
-                "according to the design."
-            )
-
-        self.state.current_event = None
-        self.state.current_event_started_at = None
-        self.state.current_event_deadline = None
-

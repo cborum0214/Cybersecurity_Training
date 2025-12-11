@@ -86,6 +86,11 @@ def dashboard():
         events.EVENT_PHISHING: "game/event_phishing.html",
         events.EVENT_PATCH: "game/event_patch.html",
         events.EVENT_TOPOLOGY: "game/event_topology.html",
+        events.EVENT_PACKET: "game/event_packet.html",
+        events.EVENT_FIREWALL: "game/event_firewall.html",
+        events.EVENT_SOCIAL: "game/event_social.html",
+        events.EVENT_PHYSICAL: "game/event_physical.html",
+        events.EVENT_PATH: "game/event_path.html",
     }
 
     template = template_map.get(ev.get("type"), "game/dashboard.html")
@@ -103,7 +108,7 @@ def dashboard():
 def choice():
     """
     Receive the player's decision for the current event (login/intrusion/
-    rogue device/phishing/patch/topology), apply the game logic,
+    rogue device/phishing/patch/topology/advanced), apply game logic,
     then redirect back to the dashboard.
     """
     state = load_state()
@@ -133,9 +138,22 @@ def choice():
     elif ev_type == events.EVENT_PATCH:
         engine.handle_patch_choice(choice_value)
     elif ev_type == events.EVENT_TOPOLOGY:
-        # topology sends JSON of connections via hidden field
         connections_json = request.form.get("connections")
         engine.handle_topology_choice(connections_json)
+    elif ev_type == events.EVENT_PACKET:
+        engine.handle_packet_choice(choice_value)
+    elif ev_type == events.EVENT_FIREWALL:
+        engine.handle_firewall_choice({
+            "action": request.form.get("fw_action"),
+            "protocol": request.form.get("fw_protocol"),
+            "port": request.form.get("fw_port"),
+        })
+    elif ev_type == events.EVENT_SOCIAL:
+        engine.handle_social_choice(choice_value)
+    elif ev_type == events.EVENT_PHYSICAL:
+        engine.handle_physical_choice(choice_value)
+    elif ev_type == events.EVENT_PATH:
+        engine.handle_path_choice(choice_value)
 
     save_state(state)
 

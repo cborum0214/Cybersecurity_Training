@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window">
+  <h2>Packet Inspection – Day {{ state.level }}</h2>
+  <p>{{ event.description }}</p>
+
+  <div class="event-meta">
+    <p><strong>Source:</strong> {{ event.src_ip }} : {{ event.src_port }}</p>
+    <p><strong>Destination:</strong> {{ event.dst_ip }} : {{ event.dst_port }}</p>
+    <p><strong>Protocol:</strong> {{ event.protocol }}</p>
+    <p><strong>Flags:</strong> {{ event.flags or "None" }}</p>
+    <p><strong>Payload Snippet:</strong> {{ event.payload }}</p>
+  </div>
+
+  <p>
+    Decide how this traffic should be handled. Consider:<br>
+    – Internal vs external IPs<br>
+    – Sensitive targets (databases, patient records)<br>
+    – Known services vs unusual ports<br>
+  </p>
+
+  <form method="post" action="{{ url_for('game.choice') }}">
+    <button type="submit" name="choice" value="allow">Allow</button>
+    <button type="submit" name="choice" value="drop">Drop</button>
+    <button type="submit" name="choice" value="investigate">Investigate Further</button>
+  </form>
+</div>
+{% endblock %}

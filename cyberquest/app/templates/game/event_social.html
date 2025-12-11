@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="event-window">
+  <h2>Social Engineering – Day {{ state.level }}</h2>
+
+  <p><strong>Channel:</strong> {{ event.channel }}</p>
+  <p><strong>From:</strong> {{ event.sender }}</p>
+
+  <div class="event-meta">
+    <p><strong>Message:</strong></p>
+    <p style="padding: 8px 10px; background:#050a14; border-radius:6px;">
+      {{ event.content }}
+    </p>
+  </div>
+
+  <p><em>Hint:</em> {{ event.hint }}</p>
+
+  <p>
+    How should you respond as the security-aware IT admin?
+    Think about policy (never share passwords, verify identity,
+    follow ticket procedures, etc.).
+  </p>
+
+  <form method="post" action="{{ url_for('game.choice') }}">
+    <button type="submit" name="choice" value="verify">
+      Verify via Trusted Channel
+    </button>
+    <button type="submit" name="choice" value="escalate">
+      Escalate to Security
+    </button>
+    <button type="submit" name="choice" value="ignore">
+      Ignore / Mark Suspicious
+    </button>
+    <button type="submit" name="choice" value="disable">
+      Disable Account Immediately
+    </button>
+  </form>
+</div>
+{% endblock %}
