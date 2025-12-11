@@ -1,5 +1,6 @@
 # app/game/routes.py
 
+import time
 from flask import render_template, request, redirect, url_for
 from . import game_bp
 from .state import load_state, save_state, reset_state
@@ -95,12 +96,20 @@ def dashboard():
 
     template = template_map.get(ev.get("type"), "game/dashboard.html")
 
+    # For intrusion events, compute remaining time for countdown
+    remaining_seconds = None
+    if ev.get("type") == events.EVENT_INTRUSION and state.current_event_deadline:
+        remaining_seconds = max(
+            0, int(state.current_event_deadline - time.time())
+        )
+
     return render_template(
         template,
         state=state,
         event=ev,
         approved_users=APPROVED_USERS,
         approved_devices=APPROVED_DEVICES,
+        remaining_seconds=remaining_seconds,
     )
 
 

@@ -1,20 +1,86 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="event-window"></div>
-  <h2>Intrusion Alert!</h2>
+<div class="event-window">
+  <h2>Intrusion Detection Alert – Day {{ state.level }}</h2>
   <p>{{ event.description }}</p>
 
-  <ul>
-    <li><strong>Source Device:</strong> {{ event.source_device }}</li>
-    <li><strong>Target:</strong> {{ event.target }}</li>
-    <li><strong>Details:</strong> {{ event.detail }}</li>
-  </ul>
+  <div class="event-meta">
+    <p><strong>Source Device:</strong> {{ event.source_device }}</p>
+    <p><strong>Target System:</strong> {{ event.target }}</p>
+    <p><strong>Activity:</strong> {{ event.detail }}</p>
+    <p><strong>Severity:</strong> {{ event.severity }}</p>
+  </div>
 
-  <p>You have {{ event.timeout_seconds }} seconds to decide (in logic; you can add a JS countdown later).</p>
+  {# pick remaining from server if present; otherwise fall back to event.timeout_seconds #}
+  {% set seconds = remaining_seconds if remaining_seconds is not none else event.timeout_seconds %}
 
-  <form method="post" action="{{ url_for('game.choice') }}">
-    <button type="submit" name="choice" value="shutdown">Shut Down Secured Network</button>
-    <button type="submit" name="choice" value="ignore">Do Nothing</button>
+  <p>
+    <strong>Time remaining:</strong>
+    <span id="intrusion-timer" data-seconds="{{ seconds }}">{{ seconds }}</span>
+    seconds
+  </p>
+
+  <p><em>Analyst Note:</em> {{ event.hint }}</p>
+
+  <p>
+    As the on-duty SOC analyst, decide whether to shut down the secure network
+    segment to contain the potential attack, or ignore the alert and allow
+    operations to continue. If you do not respond before the timer reaches 0,
+    you will receive a reprimand.
+  </p>
+
+  <form method="post" action="{{ url_for('game.choice') }}" id="intrusion-form">
+    <button type="submit" class="intrusion-choice" name="choice" value="shutdown">
+      Shut Down Secured Network
+    </button>
+    <button type="submit" class="intrusion-choice" name="choice" value="ignore">
+      Ignore Alert
+    </button>
+  </form>
+
+  <!-- Hidden form for timeout auto-submit -->
+  <form method="post" action="{{ url_for('game.choice') }}" id="intrusion-timeout-form" style="display:none;">
+    <input type="hidden" name="choice" value="timeout">
   </form>
 </div>
+
+<script>
+(function() {
+  const timerSpan = document.getElementById('intrusion-timer');
+  if (!timerSpan) return;
+
+  let remaining = parseInt(timerSpan.dataset.seconds || '30', 10);
+  if (isNaN(remaining) || remaining < 0) {
+    remaining = 30;
+  }
+
+  const buttons = document.querySelectorAll('.intrusion-choice');
+  const timeoutForm = document.getElementById('intrusion-timeout-form');
+
+  function setButtonsEnabled(enabled) {
+    buttons.forEach(btn => {
+      btn.disabled = !enabled;
+    });
+  }
+
+  // Countdown
+  const intervalId = setInterval(() => {
+    remaining -= 1;
+    if (remaining < 0) {
+      remaining = 0;
+    }
+    timerSpan.textContent = remaining;
+
+    if (remaining <= 0) {
+      clearInterval(intervalId);
+      setButtonsEnabled(false);
+
+      // Auto-submit timeout choice
+      if (timeoutForm) {
+        timeoutForm.submit();
+      }
+    }
+  }, 1000);
+})();
+</script>
 {% endblock %}

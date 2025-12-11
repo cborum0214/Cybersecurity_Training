@@ -215,7 +215,7 @@ class GameEngine:
         """
         Handle player decision for an intrusion event.
 
-        choice: 'shutdown' or 'ignore'
+        choice: 'shutdown', 'ignore', or 'timeout'
         """
         ev = self.state.current_event
         if not ev or ev["type"] != events.EVENT_INTRUSION:
@@ -223,6 +223,26 @@ class GameEngine:
 
         real_attack = ev["attack_real"]
 
+        # Special case: timer expired (no user response)
+        if choice == "timeout":
+            if real_attack:
+                self.state.add_reprimand(
+                    "Timer expired with no response. Real intrusion succeeded "
+                    "while no action was taken."
+                )
+            else:
+                self.state.add_reprimand(
+                    "Timer expired with no response to IDS alert. Even though this "
+                    "alert was benign, failing to respond is a policy violation."
+                )
+
+            # Clear current event
+            self.state.current_event = None
+            self.state.current_event_started_at = None
+            self.state.current_event_deadline = None
+            return
+
+        # Normal choices
         if choice == "shutdown":
             if real_attack:
                 self.state.add_score(20)
@@ -579,7 +599,7 @@ class GameEngine:
     def check_intrusion_timeout(self):
         """
         If an intrusion event has a deadline and the current time is past it,
-        auto-apply the 'ignore' decision.
+        auto-apply a timeout reprimand.
         """
         ev = self.state.current_event
         if not ev or ev["type"] != events.EVENT_INTRUSION:
@@ -591,8 +611,8 @@ class GameEngine:
         now = time.time()
         if now > self.state.current_event_deadline:
             self.state.add_log(
-                "[TIMEOUT] Intrusion alert timer expired – no response "
-                "received from operator."
+                "[TIMEOUT] Intrusion alert timer expired – operator did not respond."
             )
-            # Auto-apply "ignore"
-            self.handle_intrusion_choice("ignore")
+            # Auto-apply "timeout" (always reprimand)
+            self.handle_intrusion_choice("timeout")
+
