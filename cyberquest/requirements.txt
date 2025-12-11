@@ -1,0 +1,12 @@
+Flask==3.0.2
+Flask-Session==0.6.0
+Werkzeug==3.0.1
+itsdangerous==2.1.2
+click==8.1.7
+Jinja2==3.1.3
+
+# Optional but recommended for environment variable loading
+python-dotenv==1.0.1
+
+# If you're using gunicorn for deployment (Linux servers)
+gunicorn==21.2.0
